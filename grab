@@ -1,0 +1,51 @@
+package main
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+
+	_ "github.com/mattn/go-sqlite3"
+)
+
+type User struct {
+	ID       int
+	Username string
+	Password string
+}
+
+func main() {
+	// Open the database
+	db, err := sql.Open("sqlite3", "./passwords.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// Query all records
+	rows, err := db.Query("SELECT id, username, password FROM users")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var users []User
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.ID, &user.Username, &user.Password)
+		if err != nil {
+			log.Fatal(err)
+		}
+		users = append(users, user)
+	}
+
+	// Check for errors from iterating over rows
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Print all users
+	for _, user := range users {
+		fmt.Printf("ID: %d, Username: %s, Password: %s\n", user.ID, user.Username, user.Password)
+	}
+}
